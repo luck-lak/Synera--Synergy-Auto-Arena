@@ -6,6 +6,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 
 ## 目录
 
+- [Gameplay Demo](#gameplay-demo)
 - [项目亮点](#项目亮点)
 - [技术栈](#技术栈)
 - [Quick Start](#quick-start)
@@ -18,6 +19,14 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 - [Qt Integration](#qt-integration)
 - [项目状态与已知限制](#项目状态与已知限制)
 - [文档与素材说明](#文档与素材说明)
+
+## Gameplay Demo
+
+[![Synera gameplay demo](docs/media/synera-gameplay-demo.gif)](docs/media/synera-gameplay-demo.mp4)
+
+[▶ 观看完整游玩演示（MP4，约 25 秒）](docs/media/synera-gameplay-demo.mp4)
+
+演示涵盖英雄购买与部署、阵容调整，以及两轮自动战斗。点击上方动图可以打开包含游戏音效的完整视频。
 
 ## 项目亮点
 
