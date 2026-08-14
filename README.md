@@ -13,6 +13,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
   - [运行 Windows 发布版](#运行-windows-发布版推荐)
   - [使用 Qt Creator 从源码构建](#使用-qt-creator-从源码构建)
   - [存档位置](#存档位置)
+- [FAQ](#faq)
 - [Gameplay](#gameplay)
 - [Architecture](#architecture)
 - [Core Systems](#core-systems)
@@ -85,7 +86,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 3. 选择 Qt 6 Desktop Kit，例如 `Desktop Qt 6.11.1 MinGW 64-bit`，然后确认 **Configure Project**。
 4. 点击 **Build**，等待 CMake 配置和编译完成。
 5. 在 Qt Creator 显示的构建目录中找到 `Synera_Starter.exe`，把项目根目录下完整的 `assets/` 文件夹复制到 EXE 所在目录。
-6. 回到 Qt Creator 点击 **Run**。如果要直接双击构建出的 EXE，还需要保证 Qt 运行库可被系统找到；制作独立分发包时应使用 `windeployqt` 收集这些依赖。
+6. 回到 Qt Creator，点击 **Run** 启动游戏。
 
 最终运行目录至少应为：
 
@@ -97,7 +98,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
     └── ...
 ```
 
-当前 `CMakeLists.txt` 尚未自动复制资源，因此第 5 步不能省略。GitHub Releases 中的 Windows 压缩包已经完成资源复制和 `windeployqt` 部署。
+当前 `CMakeLists.txt` 尚未自动复制资源，因此第 5 步不能省略。GitHub Releases 中的 Windows 压缩包已经完成资源复制和 Qt 运行库部署；如果想脱离 Qt Creator 直接双击自己构建的 EXE，请参阅下方 [FAQ](#faq)。
 
 ### 存档位置
 
@@ -108,6 +109,56 @@ Documents/Synera/save.json
 ```
 
 只有检测到有效存档时，主菜单中的“继续游戏”按钮才会启用。
+
+## FAQ
+
+<details>
+<summary><strong>为什么 Qt Creator 中可以运行，但直接双击 Build 生成的 EXE 会提示缺少 DLL？为什么还要复制 assets/？</strong></summary>
+
+### Build 为什么会生成 EXE？
+
+C++ 项目执行 Build 时，会先把 `.cpp` 源文件编译成中间文件，再由链接器生成 `Synera_Starter.exe`。因此，EXE 是正常的编译结果；但它还不是可以直接分发的完整软件。
+
+```text
+源代码 → 编译与链接 → Synera_Starter.exe → 部署运行依赖 → 可分发的 Release 包
+```
+
+### 为什么从 Qt Creator 点击 Run 可以启动？
+
+Qt Creator 知道当前 Kit 对应的 Qt 安装位置。点击 **Run** 时，它会为程序配置运行环境，使 Windows 能够从 Qt 安装目录找到 `Qt6Core.dll`、`Qt6Widgets.dll`、`Qt6Multimedia.dll` 等依赖。
+
+直接双击 EXE 时，Qt Creator 不再参与；如果这些 DLL 和平台插件不在系统搜索路径或 EXE 附近，Windows 就会在程序真正启动前报告缺少 DLL。
+
+### 为什么还要复制 `assets/`？
+
+角色图片、动画帧、音乐和音效没有编译进 EXE，而是作为外部游戏资源保存在 `assets/` 中。程序会优先从 EXE 所在目录读取 `assets/`，因此源码构建后需要把完整文件夹复制过去。缺少 Qt DLL 通常会导致程序无法启动；缺少 `assets/` 则会导致程序可以启动，但没有图片、音乐或音效。
+
+### 怎样得到可以直接双击的独立版本？
+
+先使用 **Release** 配置构建程序，再对生成的 EXE 运行 Qt 的部署工具：
+
+```powershell
+windeployqt --release --compiler-runtime Synera_Starter.exe
+```
+
+`windeployqt` 会收集 Qt DLL、编译器运行库和 `platforms/`、`imageformats/`、`multimedia/` 等插件，但它不认识项目自己的素材，因此仍需手动复制 `assets/`。最终目录应类似：
+
+```text
+Synera-release/
+├── Synera_Starter.exe
+├── assets/
+├── platforms/
+├── imageformats/
+├── multimedia/
+├── Qt6Core.dll
+├── Qt6Gui.dll
+├── Qt6Widgets.dll
+└── ...
+```
+
+将这个完整目录压缩后上传到 GitHub Releases，用户才可以在不安装 Qt Creator 的情况下下载、解压并直接运行。
+
+</details>
 
 ## Gameplay
 
