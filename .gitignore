@@ -1,0 +1,45 @@
+# CMake build output
+/build/
+/cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+*_autogen/
+
+# Compiled binaries and intermediate files
+*.o
+*.obj
+*.a
+*.lib
+*.exe
+*.dll
+*.pdb
+
+# Qt generated files and local Qt Creator settings
+/.qtcreator/
+.qtc_clangd/
+*.pro.user
+*.user
+*.user.*
+moc_*
+ui_*
+qrc_*
+
+# IDE settings
+.idea/
+.vscode/
+
+# Local generated documents and packaged builds
+/pa_output/
+/release/
+
+# Runtime and local user data
+save.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
