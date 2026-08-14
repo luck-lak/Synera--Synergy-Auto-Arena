@@ -4,6 +4,21 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 
 这个项目重点实现了一套完整的小型自走棋循环，并将游戏规则、战斗实体、界面显示和交互按模块拆分，便于继续扩展角色、技能和玩法。
 
+## 目录
+
+- [项目亮点](#项目亮点)
+- [技术栈](#技术栈)
+- [Quick Start](#quick-start)
+  - [运行 Windows 发布版](#运行-windows-发布版推荐)
+  - [使用 Qt Creator 从源码构建](#使用-qt-creator-从源码构建)
+  - [存档位置](#存档位置)
+- [Gameplay](#gameplay)
+- [Architecture](#architecture)
+- [Core Systems](#core-systems)
+- [Qt Integration](#qt-integration)
+- [项目状态与已知限制](#项目状态与已知限制)
+- [文档与素材说明](#文档与素材说明)
+
 ## 项目亮点
 
 - 8×8 战斗棋盘和 8 格备战区，支持拖拽部署、换位、撤回和出售。
@@ -27,17 +42,20 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 
 ## Quick Start
 
-### 运行发布版
+### 运行 Windows 发布版（推荐）
 
-如果 GitHub 的 **Releases** 页面提供了 Windows 发布包：
+这条路径适合只想体验游戏、不准备安装 Qt 或编译器的用户。
 
-1. 下载并解压完整压缩包。
-2. 保持 `Synera_Starter.exe`、Qt DLL、插件目录和 `assets/` 的相对位置不变。
-3. 双击 `Synera_Starter.exe`。
+1. 打开项目的 [Releases 页面](https://github.com/luck-lak/Synera--Synergy-Auto-Arena/releases/latest)。
+2. 在 **Assets** 中下载 `Synera-v1.0.0-windows-x64.zip`。
+3. 将压缩包完整解压到一个新文件夹；不要直接在压缩包预览窗口中运行程序。
+4. 进入解压后的目录，双击 `Synera_Starter.exe`。
 
-`assets/` 包含角色图片、动画帧和声音资源，不能只单独复制 EXE。
+发布包已经包含所需的 Qt 运行库、插件和游戏素材，不需要另外安装 Qt。请保留目录结构，不要只把 EXE 单独移动出来；`assets/` 中存放着角色图片、动画帧和声音资源。
 
 ### 使用 Qt Creator 从源码构建
+
+这条路径适合阅读、修改和调试源码的开发者。
 
 构建要求：
 
@@ -47,11 +65,18 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 
 构建步骤：
 
-1. 在 Qt Creator 中选择 **Open File or Project**，打开根目录的 `CMakeLists.txt`。
-2. 选择可用的 Qt 6 Desktop Kit，例如 `Desktop Qt 6.11.1 MinGW 64-bit`。
-3. 运行 CMake 配置并执行 **Build**。
-4. 找到生成的 `Synera_Starter.exe`，将根目录的整个 `assets/` 文件夹复制到 EXE 所在目录。
-5. 从 Qt Creator 启动，或直接运行构建目录中的 EXE。
+1. 克隆仓库，并进入项目目录：
+
+   ```bash
+   git clone https://github.com/luck-lak/Synera--Synergy-Auto-Arena.git
+   cd Synera--Synergy-Auto-Arena
+   ```
+
+2. 启动 Qt Creator，选择 **Open File or Project**，打开项目根目录的 `CMakeLists.txt`。
+3. 选择 Qt 6 Desktop Kit，例如 `Desktop Qt 6.11.1 MinGW 64-bit`，然后确认 **Configure Project**。
+4. 点击 **Build**，等待 CMake 配置和编译完成。
+5. 在 Qt Creator 显示的构建目录中找到 `Synera_Starter.exe`，把项目根目录下完整的 `assets/` 文件夹复制到 EXE 所在目录。
+6. 回到 Qt Creator 点击 **Run**。如果要直接双击构建出的 EXE，还需要保证 Qt 运行库可被系统找到；制作独立分发包时应使用 `windeployqt` 收集这些依赖。
 
 最终运行目录至少应为：
 
@@ -63,7 +88,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
     └── ...
 ```
 
-当前 `CMakeLists.txt` 尚未自动复制资源。制作可分发的 Windows 版本时，还需要使用 Qt 的 `windeployqt` 收集 Qt DLL 和平台插件；仓库中的本地 `release/` 文件夹与 GitHub Releases 并不会自动同步。
+当前 `CMakeLists.txt` 尚未自动复制资源，因此第 5 步不能省略。GitHub Releases 中的 Windows 压缩包已经完成资源复制和 `windeployqt` 部署。
 
 ### 存档位置
 
@@ -151,28 +176,23 @@ flowchart LR
 ### 运行时结构
 
 ```mermaid
-flowchart TD
-    App["QApplication / 事件循环"] --> Menu["MainMenu"]
-    Menu -->|newGame / continueGame| Window["GameWindow"]
-    Window --> View["QGraphicsView"]
-    Window --> Panels["玩家、单位与商店面板"]
-    Window <-->|"UI 命令 / 状态信号"| Game["Game：游戏总控制器"]
-    View -->|显示| Scene
-    Panels <-->|"查询状态 / 提交操作"| Game
-    Game --> Scene["QGraphicsScene"]
-    Game --> Timer["QTimer：战斗 Tick"]
-    Game --> Board["Board / Bench"]
-    Game --> Player["Player"]
-    Game --> Traits["TraitManager"]
-    Game <-->|"驱动更新 / 读取状态"| Units["Unit 与英雄子类"]
-    Units --> Skills["Skill / SkillEffect"]
-    Units --> Projectiles["Projectile"]
-    Scene --> Items["GridItem / UnitItem / EquipmentItem"]
-    Game <-->|"场景同步 / 输入信号"| Items
-    Items -. 读取显示状态 .-> Units
+flowchart LR
+    Menu["MainMenu"] -->|新游戏 / 继续游戏| UI["GameWindow<br/>View + Panels"]
+    UI <-->|玩家操作 / 状态信号| Game["Game<br/>核心协调器"]
+    Timer["QTimer<br/>16 ms 战斗 Tick"] -->|timeout| Game
+
+    Game --> State["Board · Bench · Player<br/>TraitManager"]
+    Game <-->|驱动 / 读取| Units["Unit 与英雄子类"]
+    Units --> Combat["Skill · SkillEffect<br/>Projectile"]
+
+    UI -->|显示| Scene["QGraphicsScene"]
+    Game -->|创建 / 同步| Scene
+    Scene --> Items["GridItem · UnitItem<br/>EquipmentItem"]
+    Items -->|拖拽 / 点击信号| Game
+    Items -. 读取绘制状态 .-> Units
 ```
 
-`Game` 是核心协调者：它拥有逻辑棋盘、单位列表、玩家状态、图形场景和战斗计时器。`GameWindow` 负责组合界面并订阅游戏状态变化；`UnitItem` 等图形对象只负责显示和鼠标交互，再通过信号把操作交还给 `Game` 验证。
+`Game` 是核心协调者：它拥有逻辑棋盘、单位列表、玩家状态、图形场景和战斗计时器。`GameWindow` 组合视图与各类面板，把玩家操作提交给 `Game`，再根据状态信号刷新界面。`GridItem`、`UnitItem` 和 `EquipmentItem` 负责显示与鼠标交互，操作仍交由 `Game` 验证和同步；单位自身则维护战斗状态，并调用技能、状态效果和投射物逻辑。
 
 ### 源码目录
 
