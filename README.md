@@ -47,7 +47,7 @@ Synera 是一个使用 C++17 与 Qt 6 开发的单机 PvE 自走棋游戏。玩�
 这条路径适合只想体验游戏、不准备安装 Qt 或编译器的用户。
 
 1. 打开项目的 [Releases 页面](https://github.com/luck-lak/Synera--Synergy-Auto-Arena/releases/latest)。
-2. 在 **Assets** 中下载 `Synera-v1.0.0-windows-x64.zip`。
+2. 在 **Assets** 中下载 `release.zip`。
 3. 将压缩包完整解压到一个新文件夹；不要直接在压缩包预览窗口中运行程序。
 4. 进入解压后的目录，双击 `Synera_Starter.exe`。
 
