@@ -175,24 +175,36 @@ flowchart LR
 
 ### 运行时结构
 
+先看程序运行时的主干关系：
+
 ```mermaid
-flowchart LR
-    Menu["MainMenu"] -->|新游戏 / 继续游戏| UI["GameWindow<br/>View + Panels"]
-    UI <-->|玩家操作 / 状态信号| Game["Game<br/>核心协调器"]
-    Timer["QTimer<br/>16 ms 战斗 Tick"] -->|timeout| Game
-
-    Game --> State["Board · Bench · Player<br/>TraitManager"]
-    Game <-->|驱动 / 读取| Units["Unit 与英雄子类"]
-    Units --> Combat["Skill · SkillEffect<br/>Projectile"]
-
-    UI -->|显示| Scene["QGraphicsScene"]
-    Game -->|创建 / 同步| Scene
-    Scene --> Items["GridItem · UnitItem<br/>EquipmentItem"]
-    Items -->|拖拽 / 点击信号| Game
-    Items -. 读取绘制状态 .-> Units
+flowchart TD
+    App["QApplication<br/>事件循环"] --> Menu["MainMenu<br/>主菜单"]
+    Menu -->|新游戏 / 继续游戏| Window["GameWindow<br/>窗口与信息面板"]
+    Window <-->|玩家操作 / 状态信号| Game["Game<br/>核心协调器"]
+    Timer["QTimer"] -->|每 16 ms 推进战斗| Game
+    Game --> Logic["游戏逻辑<br/>棋盘、玩家与战斗单位"]
+    Game -->|同步场景| Scene["QGraphicsScene"]
+    Window -->|通过 QGraphicsView 显示| Scene
 ```
 
-`Game` 是核心协调者：它拥有逻辑棋盘、单位列表、玩家状态、图形场景和战斗计时器。`GameWindow` 组合视图与各类面板，把玩家操作提交给 `Game`，再根据状态信号刷新界面。`GridItem`、`UnitItem` 和 `EquipmentItem` 负责显示与鼠标交互，操作仍交由 `Game` 验证和同步；单位自身则维护战斗状态，并调用技能、状态效果和投射物逻辑。
+`GameWindow` 负责界面组合，`Game` 负责规则与流程，两者通过直接调用和 Qt 信号交换操作与状态。战斗阶段由 `QTimer` 周期性调用 `Game`；`Game` 更新逻辑对象后，再把结果同步到 `QGraphicsScene`，由窗口中的 `QGraphicsView` 显示。
+
+继续展开 `Game` 内部，核心对象之间的关系如下：
+
+```mermaid
+flowchart TD
+    Game["Game"] --> Board["Board / Bench<br/>位置与占用关系"]
+    Game --> Player["Player<br/>生命、金币与等级"]
+    Game --> Traits["TraitManager<br/>羁绊统计与加成"]
+    Game <-->|驱动战斗 / 获取上下文| Units["Unit 与英雄子类"]
+    Units --> Combat["Skill · SkillEffect<br/>Projectile"]
+    Game --> Scene["QGraphicsScene"]
+    Scene --> Items["GridItem · UnitItem<br/>EquipmentItem"]
+    Items -->|拖拽与点击信号| Game
+```
+
+这里的双向箭头只保留在 `Game` 与单位之间：`Game` 在每个 Tick 中驱动单位更新，而单位的寻路、技能和投射物又需要读取 `Game` 提供的棋盘、目标及场景上下文。图形项不负责判定游戏规则；它们读取状态完成绘制，并把鼠标操作发送给 `Game` 统一验证。
 
 ### 源码目录
 
